@@ -1,8 +1,10 @@
+#include <array>
 #include <bitset>
 #include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <string>
+#include <utility>
 
 using BoardSize = size_t;
 constexpr BoardSize BOARD_SIZE = 10;
@@ -41,6 +43,20 @@ constexpr Board gen_attack_mask_idx(BoardSize idx) {
     return board;
 }
 
+template <BoardSize... I>
+constexpr std::array<Board, BOARD_SIZE * BOARD_SIZE> gen_attack_masks_impl(
+    std::index_sequence<I...>) {
+    return {gen_attack_mask_idx(I)...};
+}
+
+constexpr std::array<Board, BOARD_SIZE * BOARD_SIZE> gen_attack_masks() {
+    return gen_attack_masks_impl(
+        std::make_index_sequence<BOARD_SIZE * BOARD_SIZE>{});
+}
+
+constexpr std::array<Board, BOARD_SIZE * BOARD_SIZE> ATTACK_MASKS =
+    gen_attack_masks();
+
 std::string board_format(Board board) {
     std::string fmt{};
 
@@ -56,11 +72,9 @@ std::string board_format(Board board) {
 }
 
 int main() {
-    Board board{};
-    board.set(14);
-
-    std::cout << board_format(board);
-    std::cout << board_format(gen_attack_mask_idx(14));
+    for (BoardSize i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
+        std::cout << board_format(ATTACK_MASKS[i]);
+    }
 
     return 0;
 }
