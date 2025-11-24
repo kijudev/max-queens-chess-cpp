@@ -1,77 +1,55 @@
 #include <bitset>
 #include <cassert>
-#include <cstdint>
+#include <cstddef>
+#include <iostream>
 #include <string>
 
-using BoardSize = uint16_t;
-constexpr BoardSize BOARD_SIZE = 8;
-using Board = std::bitset<BOARD_SIZE>;
+using BoardSize = size_t;
+constexpr BoardSize BOARD_SIZE = 10;
+using Board = std::bitset<BOARD_SIZE * BOARD_SIZE>;
 
-constexpr Board calc_rank_mask() {
+constexpr Board gen_r_mask_idx(BoardSize idx) {
     Board board{};
+    BoardSize offset = idx % BOARD_SIZE;
 
     for (BoardSize i = 0; i < BOARD_SIZE; ++i) {
-        board.set(i);
+        board.set(i + offset);
     }
 
     return board;
 }
 
-constexpr Board calc_file_mask() {
+constexpr Board gen_f_mask_idx(BoardSize idx) {
     Board board{};
 
     for (BoardSize i = 0; i < BOARD_SIZE; ++i) {
-        board |= (Board)1 << (i * BOARD_SIZE);
+        board.set((i * BOARD_SIZE) + idx);
     }
 
     return board;
 }
 
-constexpr Board calc_diagonal_left_mask() {
-    Board board{};
+std::string board_format(Board board) {
+    std::string fmt{};
 
-    for (BoardSize i = 0; i < BOARD_SIZE; ++i) {
-        board |= (Board)1 << (i * BOARD_SIZE);
+    for (BoardSize i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
+        fmt += board.test(i) ? "# " : ". ";
+
+        if (i % BOARD_SIZE == BOARD_SIZE - 1) {
+            fmt += "\n";
+        }
     }
 
-    return board;
+    return fmt + "\n";
 }
 
-constexpr Board calc_diagonal_right_mask() {
+int main() {
     Board board{};
+    board.set(4);
 
-    for (BoardSize i = 0; i < BOARD_SIZE; ++i) {
-        board |= (Board)1 << (i * BOARD_SIZE);
-    }
+    std::cout << board_format(board);
+    std::cout << board_format(gen_r_mask_idx(4));
+    std::cout << board_format(gen_f_mask_idx(4));
 
-    return board;
+    return 0;
 }
-
-constexpr Board RANK_MASK = calc_rank_mask();
-constexpr Board FILE_MASK = 0x0101010101010101;
-constexpr Board DIAGONAL_LEFT_MASK = 0x8040201008040201;
-constexpr Board DIAGONAL_RIGHT_MASK = 0x0102040810204080;
-
-const Board DIAGONAL_LEFT_MASKS[15] = {
-    DIAGONAL_LEFT_MASK << 56, DIAGONAL_LEFT_MASK << 48,
-    DIAGONAL_LEFT_MASK << 40, DIAGONAL_LEFT_MASK << 32,
-    DIAGONAL_LEFT_MASK << 24, DIAGONAL_LEFT_MASK << 16,
-    DIAGONAL_LEFT_MASK << 8,  DIAGONAL_LEFT_MASK,
-    DIAGONAL_LEFT_MASK >> 8,  DIAGONAL_LEFT_MASK >> 16,
-    DIAGONAL_LEFT_MASK >> 24, DIAGONAL_LEFT_MASK >> 32,
-    DIAGONAL_LEFT_MASK >> 40, DIAGONAL_LEFT_MASK >> 48,
-    DIAGONAL_LEFT_MASK >> 56,
-};
-
-const Board DIAGONAL_RIGHT_MASKS[15] = {
-    DIAGONAL_RIGHT_MASK << 56, DIAGONAL_RIGHT_MASK << 48,
-    DIAGONAL_RIGHT_MASK << 40, DIAGONAL_RIGHT_MASK << 32,
-    DIAGONAL_RIGHT_MASK << 24, DIAGONAL_RIGHT_MASK << 16,
-    DIAGONAL_RIGHT_MASK << 8,  DIAGONAL_RIGHT_MASK,
-    DIAGONAL_RIGHT_MASK >> 8,  DIAGONAL_RIGHT_MASK >> 16,
-    DIAGONAL_RIGHT_MASK >> 24, DIAGONAL_RIGHT_MASK >> 32,
-    DIAGONAL_RIGHT_MASK >> 40, DIAGONAL_RIGHT_MASK >> 48,
-    DIAGONAL_RIGHT_MASK >> 56,
-};
-
-int main() { return 0; }
