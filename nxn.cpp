@@ -8,22 +8,34 @@ using BoardSize = size_t;
 constexpr BoardSize BOARD_SIZE = 10;
 using Board = std::bitset<BOARD_SIZE * BOARD_SIZE>;
 
-constexpr Board gen_r_mask_idx(BoardSize idx) {
+constexpr Board gen_attack_mask_idx(BoardSize idx) {
     Board board{};
-    BoardSize offset = idx % BOARD_SIZE;
+    BoardSize rank = idx / BOARD_SIZE;
+    BoardSize file = idx % BOARD_SIZE;
 
+    // Rank mask, file mask
     for (BoardSize i = 0; i < BOARD_SIZE; ++i) {
-        board.set(i + offset);
+        board.set(i + (rank * BOARD_SIZE));
+        board.set((i * BOARD_SIZE) + file);
     }
 
-    return board;
-}
+    // Diagonal left mask
+    for (BoardSize i = 0; (rank + i) < BOARD_SIZE && (file + i) < BOARD_SIZE;
+         ++i) {
+        board.set(((rank + i) * BOARD_SIZE) + (file + i));
+    }
 
-constexpr Board gen_f_mask_idx(BoardSize idx) {
-    Board board{};
+    for (BoardSize i = 0; (rank - i + 1) > 0 && (file - i + 1) > 0; ++i) {
+        board.set(((rank - i) * BOARD_SIZE) + (file - i));
+    }
 
-    for (BoardSize i = 0; i < BOARD_SIZE; ++i) {
-        board.set((i * BOARD_SIZE) + idx);
+    // Diagonal right mask
+    for (BoardSize i = 0; (rank - i + 1) > 0 && (file + i) < BOARD_SIZE; ++i) {
+        board.set(((rank - i) * BOARD_SIZE) + (file + i));
+    }
+
+    for (BoardSize i = 0; (rank + i) < BOARD_SIZE && (file - i + 1) > 0; ++i) {
+        board.set(((rank + i) * BOARD_SIZE) + (file - i));
     }
 
     return board;
@@ -45,11 +57,10 @@ std::string board_format(Board board) {
 
 int main() {
     Board board{};
-    board.set(4);
+    board.set(14);
 
     std::cout << board_format(board);
-    std::cout << board_format(gen_r_mask_idx(4));
-    std::cout << board_format(gen_f_mask_idx(4));
+    std::cout << board_format(gen_attack_mask_idx(14));
 
     return 0;
 }
