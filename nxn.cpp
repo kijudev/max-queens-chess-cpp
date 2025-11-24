@@ -1,10 +1,12 @@
 #include <array>
 #include <bitset>
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <iostream>
 #include <string>
 #include <utility>
+#include <vector>
 
 using BoardSize = size_t;
 constexpr BoardSize BOARD_SIZE = 10;
@@ -60,10 +62,10 @@ constexpr std::array<Board, BOARD_SIZE * BOARD_SIZE> ATTACK_MASKS =
 std::string board_format(Board board) {
     std::string fmt{};
 
-    for (BoardSize i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
-        fmt += board.test(i) ? "# " : ". ";
+    for (BoardSize pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
+        fmt += board.test(pos) ? "# " : ". ";
 
-        if (i % BOARD_SIZE == BOARD_SIZE - 1) {
+        if (pos % BOARD_SIZE == BOARD_SIZE - 1) {
             fmt += "\n";
         }
     }
@@ -72,9 +74,49 @@ std::string board_format(Board board) {
 }
 
 int main() {
-    for (BoardSize i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
-        std::cout << board_format(ATTACK_MASKS[i]);
+    auto time_start = std::chrono::high_resolution_clock::now();
+
+    std::vector<Board> current_boards;
+    std::vector<Board> next_boards;
+
+    current_boards.reserve(BOARD_SIZE * BOARD_SIZE * BOARD_SIZE);
+    next_boards.reserve(BOARD_SIZE * BOARD_SIZE * BOARD_SIZE);
+
+    for (BoardSize pos = 0; pos < BOARD_SIZE; ++pos) {
+        current_boards.push_back({});
+        current_boards[current_boards.size() - 1].set(pos);
     }
+
+    for (BoardSize rank = 1; rank < BOARD_SIZE; ++rank) {
+        next_boards.clear();
+
+        for (const auto& board : current_boards) {
+            for (BoardSize file = 0; file < BOARD_SIZE; ++file) {
+                BoardSize pos = (rank * BOARD_SIZE) + file;
+                Board result_mask = ATTACK_MASKS[pos] & board;
+
+                if (!result_mask.any()) {
+                    next_boards.push_back(board);
+                    next_boards[next_boards.size() - 1].set(pos);
+                }
+            }
+        }
+
+        std::swap(current_boards, next_boards);
+    }
+
+    auto time_end = std::chrono::high_resolution_clock::now();
+    double time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                      time_end - time_start)
+                      .count();
+
+    for (const Board board : current_boards) {
+        std::cout << board_format(board);
+    }
+
+    std::cout << "Execution time (ns) -> " << time << "\n";
+    std::cout << "Number of possible boards -> " << current_boards.size()
+              << "\n";
 
     return 0;
 }
